@@ -468,6 +468,48 @@ function sparkles(drift) {
   return out
 }
 
+/** A few meteors that cross the sky now and then, each on its own long cycle. */
+function shootingStars() {
+  return [[260, 70, 17, -4], [640, 40, 23, -13], [980, 110, 31, -24]].map(([x, y, cycle, delay]) =>
+    `<g transform="translate(${x} ${y})"><g class="ss" style="animation-duration:${cycle}s;animation-delay:${delay}s">` +
+    `<line x1="0" y1="0" x2="-110" y2="-36" stroke="url(#tail)" stroke-width="2" stroke-linecap="round"/>` +
+    `<circle r="1.8" fill="#ffffff"/></g></g>`).join('')
+}
+
+/** A snowman beside the cabin, lit by the moon from the right, its shadow falling to the left. */
+function snowman(x, base) {
+  const SNOW = '#eef4ff'
+  const SHADE = '#b9c7e2'
+  let s = `<ellipse cx="${n(x - 22)}" cy="${n(base)}" rx="30" ry="5" fill="#7f93c0" opacity="0.45"/>`
+  for (const [r, cy] of [[17, base - 15], [12.5, base - 41], [9, base - 60]]) {
+    s += `<circle cx="${n(x)}" cy="${n(cy)}" r="${r}" fill="${SNOW}"/>`
+    s += `<path d="M${pt(x, cy - r)}A${r} ${r} 0 0 0 ${pt(x, cy + r)}A${r * 0.8} ${r} 0 0 1 ${pt(x, cy - r)}Z" fill="${SHADE}" opacity="0.6"/>`
+  }
+  const hy = base - 60
+  s += `<path d="M${pt(x - 12, base - 46)}L${pt(x - 30, base - 58)}M${pt(x - 25, base - 55)}L${pt(x - 31, base - 52)}M${pt(x + 12, base - 46)}L${pt(x + 29, base - 60)}M${pt(x + 24, base - 56)}L${pt(x + 27, base - 64)}" stroke="#3a2a1c" stroke-width="2" stroke-linecap="round" fill="none"/>`
+  s += `<path d="M${pt(x - 9, hy + 6)}Q${pt(x, hy + 10)} ${pt(x + 9, hy + 6)}L${pt(x + 8, hy + 10)}Q${pt(x, hy + 13)} ${pt(x - 9, hy + 10)}Z M${pt(x + 4, hy + 9)}L${pt(x + 7, hy + 20)}L${pt(x + 10, hy + 19)}L${pt(x + 7, hy + 9)}Z" fill="#b8323a"/>`
+  s += `<circle cx="${n(x - 3.5)}" cy="${n(hy - 2)}" r="1.3" fill="#1a1a22"/><circle cx="${n(x + 3)}" cy="${n(hy - 2)}" r="1.3" fill="#1a1a22"/>`
+  s += `<path d="M${pt(x - 1, hy + 0.5)}L${pt(x - 11, hy + 2.5)}L${pt(x - 1, hy + 3)}Z" fill="#e07b2e"/>`
+  s += `<path d="M${pt(x - 9, hy - 7)}H${n(x + 9)}V${n(hy - 9)}H${n(x + 6)}V${n(hy - 21)}H${n(x - 6)}V${n(hy - 9)}H${n(x - 9)}Z" fill="#15131c"/>`
+  s += `<path d="M${pt(x - 6, hy - 21)}Q${pt(x, hy - 24)} ${pt(x + 6, hy - 21)}Z" fill="${SNOW}"/>`
+  for (const dy of [-41, -32, -23]) s += `<circle cx="${n(x - 1)}" cy="${n(base + dy)}" r="1.4" fill="#1a1a22"/>`
+  return s
+}
+
+/** A fox that trots along the front drift, left to right, then is gone for a while. */
+function fox(drift) {
+  let d = ''
+  for (let x = -80; x <= 1680; x += 40) d += `${d ? 'L' : 'M'}${pti(x, drift(x) + 14)}`
+  const body = `<g class="fb">` +
+    `<path d="M-15 -13Q-30 -20 -42 -9Q-31 -6 -15 -9Z" fill="#c2652b"/><path d="M-36 -12Q-42 -10 -42 -9Q-38 -7 -34 -8Z" fill="#f1ece4"/>` +
+    `<ellipse cx="0" cy="-12" rx="15" ry="6.5" fill="#c86a2d"/><ellipse cx="3" cy="-8.5" rx="8" ry="2.6" fill="#efe4d4"/>` +
+    `<path d="M11 -15Q16 -24 21 -19L28 -15L19 -12Q13 -11 11 -15Z" fill="#c86a2d"/><path d="M21 -15L28 -15L20 -12Z" fill="#efe4d4"/>` +
+    `<path d="M14 -20L15 -27L18 -21ZM18 -20L20 -26L21 -19Z" fill="#7a3a18"/><circle cx="21" cy="-17.5" r="0.9" fill="#120c08"/></g>` +
+    `<path class="la" d="M-9 -7V1M8 -7V1" stroke="#2a1a10" stroke-width="2.2" stroke-linecap="round"/>` +
+    `<path class="lb" d="M-5 -7V1M11 -7V1" stroke="#2a1a10" stroke-width="2.2" stroke-linecap="round"/>`
+  return `<g class="fox" style="offset-path:path('${d}')"><g transform="scale(1.25)">${body}</g></g>`
+}
+
 // ---------------------------------------------------------------- the whole scene
 
 /**
@@ -484,9 +526,6 @@ function compose(p, lite) {
   const snow = 0.25 + (p / 100) * 0.75
   const drift = driftAt(p * 0.75)
   const flakeCount = Math.round((70 + p * 4.5) * (lite ? 0.5 : 1))
-  const ringLen = (2 * Math.PI * 26).toFixed(1)
-  const ringOff = ((1 - p / 100) * 2 * Math.PI * 26).toFixed(1)
-  const badgeColor = p >= 85 ? '#ff7b6b' : p >= 60 ? '#ffc46b' : '#7fb3ff'
   const cabinX = 1225
   const cabinY = field(1290) + 4
 
@@ -506,7 +545,16 @@ function compose(p, lite) {
   @keyframes spill { 0%,100% { opacity: 0.8; } 35% { opacity: 1; } 60% { opacity: 0.7; } }
   .smk { opacity: 0; transform-box: fill-box; transform-origin: center; animation: smoke 9s linear infinite; }
   @keyframes smoke { 0% { transform: translate(0, 0) scale(0.5); opacity: 0; } 12% { opacity: 0.32; } 100% { transform: translate(-46px, -150px) scale(2.8); opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .fl, .sw, .s, .w, .sp { animation: none; } .smk { animation: none; opacity: 0.18; } }
+  .ss { opacity: 0; animation: meteor linear infinite; }
+  @keyframes meteor { 0% { transform: translate(0, 0); opacity: 0; } 1% { opacity: 1; } 5% { transform: translate(330px, 108px); opacity: 0; } 100% { transform: translate(330px, 108px); opacity: 0; } }
+  .fox { offset-rotate: 0deg; offset-distance: 0%; animation: trot 75s linear infinite; animation-delay: -6s; }
+  @keyframes trot { 0% { offset-distance: 0%; } 45% { offset-distance: 100%; } 100% { offset-distance: 100%; } }
+  .fb { animation: bob 0.5s ease-in-out infinite alternate; }
+  @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-1.2px); } }
+  .la, .lb { animation: step 0.5s steps(1) infinite; }
+  .lb { animation-delay: -0.25s; }
+  @keyframes step { 0% { opacity: 1; } 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .ss, .fox { display: none; } .fl, .sw, .s, .w, .sp, .fb, .la, .lb { animation: none; } .smk { animation: none; opacity: 0.18; } }
 </style>
 <svg width="100%" height="100%" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
   <defs>
@@ -547,10 +595,15 @@ function compose(p, lite) {
       <stop offset="0" stop-color="#ffcf80" stop-opacity="0.16"/>
       <stop offset="1" stop-color="#ffcf80" stop-opacity="0"/>
     </radialGradient>
+    <linearGradient id="tail" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="-110" y2="-36">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
     ${pineGradients()}
   </defs>
   <rect width="1600" height="900" fill="url(#sky)"/>
   ${stars(90)}
+  ${lite ? '' : shootingStars()}
   <circle cx="${MOON_X}" cy="${MOON_Y}" r="140" fill="url(#glow)"/>
   <circle cx="${MOON_X}" cy="${MOON_Y}" r="48" fill="#fff4d6"/>
   <circle cx="1362" cy="140" r="7" fill="#efe3c0" opacity="0.6"/>
@@ -562,19 +615,12 @@ function compose(p, lite) {
   ${hill(field, 'url(#field)')}
   ${midForest(snow)}
   ${cabin(cabinX, cabinY, snow)}
+  ${snowman(cabinX - 48, field(cabinX - 48) + 14)}
   ${hill(drift, 'url(#drift)')}
   ${lite ? '' : sparkles(drift)}
+  ${fox(drift)}
   ${nearForest(snow)}
   ${flakes(flakeCount)}
-</svg>
-<svg width="100%" height="100%" viewBox="0 0 1600 900" preserveAspectRatio="xMinYMin meet">
-  <g transform="translate(34 34)">
-    <circle cx="32" cy="32" r="30" fill="#0b1430" opacity="0.75"/>
-    <circle cx="32" cy="32" r="26" fill="none" stroke="#2b3a66" stroke-width="5"/>
-    <circle cx="32" cy="32" r="26" fill="none" stroke="${badgeColor}" stroke-width="5" stroke-linecap="round"
-      stroke-dasharray="${ringLen}" stroke-dashoffset="${ringOff}" transform="rotate(-90 32 32)"/>
-    <text x="32" y="37" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" font-weight="700" fill="#eef3ff">${p}%</text>
-  </g>
 </svg>
 </svg>`
 }
