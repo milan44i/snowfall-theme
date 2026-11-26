@@ -500,14 +500,21 @@ function snowman(x, base) {
 function fox(drift) {
   let d = ''
   for (let x = -80; x <= 1680; x += 40) d += `${d ? 'L' : 'M'}${pti(x, drift(x) + 14)}`
-  const body = `<g class="fb">` +
+  const leg = (x, hind, phase, coat, sock) => {
+    const coatPath = hind ? `M${x} -12L${x + 1.6} -7L${x - 2} -3.5` : `M${x} -12L${x} -6`
+    const sockPath = hind ? `M${x - 2} -3.5L${x - 1} 0.8L${x + 1} 1` : `M${x} -6L${x + 0.5} -2.5L${x + 0.3} 0.8L${x + 2} 1`
+    return `<g class="lg ${phase}" style="transform-origin:${x}px -12px">` +
+      `<path d="${coatPath}" stroke="${coat}" stroke-width="${hind ? 3.4 : 2.6}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>` +
+      `<path d="${sockPath}" stroke="${sock}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></g>`
+  }
+  const far = leg(9, false, 'pb', '#a8541f', '#1c120a') + leg(-9, true, 'pa', '#a8541f', '#1c120a')
+  const near = leg(6, false, 'pa', '#c86a2d', '#2a1a10') + leg(-6, true, 'pb', '#c86a2d', '#2a1a10')
+  const body = `<g transform="translate(0 -3)"><g class="fb">` +
     `<path d="M-15 -13Q-30 -20 -42 -9Q-31 -6 -15 -9Z" fill="#c2652b"/><path d="M-36 -12Q-42 -10 -42 -9Q-38 -7 -34 -8Z" fill="#f1ece4"/>` +
     `<ellipse cx="0" cy="-12" rx="15" ry="6.5" fill="#c86a2d"/><ellipse cx="3" cy="-8.5" rx="8" ry="2.6" fill="#efe4d4"/>` +
     `<path d="M11 -15Q16 -24 21 -19L28 -15L19 -12Q13 -11 11 -15Z" fill="#c86a2d"/><path d="M21 -15L28 -15L20 -12Z" fill="#efe4d4"/>` +
-    `<path d="M14 -20L15 -27L18 -21ZM18 -20L20 -26L21 -19Z" fill="#7a3a18"/><circle cx="21" cy="-17.5" r="0.9" fill="#120c08"/></g>` +
-    `<path class="la" d="M-9 -7V1M8 -7V1" stroke="#2a1a10" stroke-width="2.2" stroke-linecap="round"/>` +
-    `<path class="lb" d="M-5 -7V1M11 -7V1" stroke="#2a1a10" stroke-width="2.2" stroke-linecap="round"/>`
-  return `<g class="fox" style="offset-path:path('${d}')"><g transform="scale(1.25)">${body}</g></g>`
+    `<path d="M14 -20L15 -27L18 -21ZM18 -20L20 -26L21 -19Z" fill="#7a3a18"/><circle cx="21" cy="-17.5" r="0.9" fill="#120c08"/></g></g>`
+  return `<g class="fox" style="offset-path:path('${d}')"><g transform="scale(1.25)">${far}${body}${near}</g></g>`
 }
 
 // ---------------------------------------------------------------- the whole scene
@@ -551,10 +558,10 @@ function compose(p, lite) {
   @keyframes trot { 0% { offset-distance: 0%; } 45% { offset-distance: 100%; } 100% { offset-distance: 100%; } }
   .fb { animation: bob 0.5s ease-in-out infinite alternate; }
   @keyframes bob { from { transform: translateY(0); } to { transform: translateY(-1.2px); } }
-  .la, .lb { animation: step 0.5s steps(1) infinite; }
-  .lb { animation-delay: -0.25s; }
-  @keyframes step { 0% { opacity: 1; } 50% { opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .ss, .fox { display: none; } .fl, .sw, .s, .w, .sp, .fb, .la, .lb { animation: none; } .smk { animation: none; opacity: 0.18; } }
+  .lg { animation: gait 0.5s ease-in-out infinite; }
+  .pb { animation-delay: -0.25s; }
+  @keyframes gait { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } }
+  @media (prefers-reduced-motion: reduce) { .ss, .fox { display: none; } .fl, .sw, .s, .w, .sp, .fb, .lg { animation: none; } .smk { animation: none; opacity: 0.18; } }
 </style>
 <svg width="100%" height="100%" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
   <defs>
