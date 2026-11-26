@@ -1,5 +1,5 @@
 import { atom, read, update } from 'claude-code'
-import type { Register, ThemeSetArgs } from 'claude-code'
+import type { EngineInterface, Register, ThemeSetArgs } from 'claude-code'
 
 import { makeColors } from './make-colors.js'
 import { scene } from './scene.js'
@@ -29,7 +29,24 @@ const { theme, problems } = makeColors({
 
 const LOOK: ThemeSetArgs = {
   colors: theme,
-  backdrop: { scene: 'snow', glass: { blur: 18, tint: '#0b1430', opacity: 0.55 } },
+  backdrop: { scene: 'snow', glass: { blur: 0, tint: '#0b1430', opacity: 0.15 } },
+}
+
+const box = { backgroundColor: '#0b1430cc', color: '#eef3ff', radius: 12, padding: 14, shadow: { y: 2, blur: 10, color: '#00000066' } }
+
+const BOXED: ThemeSetArgs = {
+  ...LOOK,
+  style: { AssistantMessage: box, UserMessage: { ...box, backgroundColor: '#182444e6' } },
+}
+
+// A build without `style` throws, so fall back to the plain look.
+async function applyLook($: EngineInterface) {
+  try {
+    return await $.theme.set(BOXED)
+  } catch (error) {
+    $.ui.log(String(error))
+    return await $.theme.set(LOOK)
+  }
 }
 
 export const register: Register = on => {
@@ -38,7 +55,7 @@ export const register: Register = on => {
     if (unpainted !== undefined) {
       $.ui.toast(unpainted)
     }
-    const set = await $.theme.set(LOOK)
+    const set = await applyLook($)
     if (!set.isDrawn) {
       $.ui.status(set.reason)
     }
