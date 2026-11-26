@@ -49,16 +49,21 @@ async function applyLook($: EngineInterface) {
   }
 }
 
+let isDrawn = false
+
+async function paint($: EngineInterface) {
+  const set = await applyLook($)
+  isDrawn = set.isDrawn
+  $.ui.status(set.isDrawn ? undefined : set.reason)
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const unpainted = problems.find(line => line.startsWith("Desktop won't paint"))
     if (unpainted !== undefined) {
       $.ui.toast(unpainted)
     }
-    const set = await applyLook($)
-    if (!set.isDrawn) {
-      $.ui.status(set.reason)
-    }
+    await paint($)
     const usage = await $.session.usage()
     await update($, fill, () => usage.context.percent ?? 0)
 
@@ -66,8 +71,12 @@ export const register: Register = on => {
   })
 
   // After each model response, read the context fill and let the snow follow it.
+  // A client that attached after session start gets the look on the next step.
   on('turn.step', async function* ($, e, next) {
     const result = yield* next(e)
+    if (!isDrawn) {
+      await paint($)
+    }
     const usage = await $.session.usage()
     const percent = usage.context.percent
     if (percent !== undefined) {
